@@ -4,7 +4,7 @@
 import argparse
 import livesplit_core
 import os
-from pprint import pprint
+from pprint import pprint, pformat
 import string
 import sys
 import urwid
@@ -22,7 +22,7 @@ class InputHandler:
 			'Q': lambda: self.out(),
 			'1': lambda: self.timer.split_or_start(),
 			'2': lambda: self.timer.skip_split(),
-			'3': lambda: self.timer.reset(true),
+			'3': lambda: self.timer.reset(True),
 			'4': lambda: self.timer.switch_to_previous_comparison(),
 			'5': lambda: self.timer.toggle_pause_or_start(),
 			'6': lambda: self.timer.switch_to_next_comparison(),
@@ -41,24 +41,25 @@ class LoopHandler:
 
 		splits_state = self.layout['splits'].state(self.timer, self.settings)
 		title_state = self.layout['title'].state(self.timer)
-		game = title_state.line1() or ""
-		category = title_state.line2() or ""
-		attempts = "%i"  % title_state.attempts()
+		game = (title_state.line1() or b"").decode('utf8')
+		category = (title_state.line2() or b"").decode('utf8')
+		attempts = "%i" % title_state.attempts()
 
 		timer_state = self.layout['timer'].state(self.timer, self.settings)
-		time = "%s%s" % (timer_state.time(), timer_state.fraction())
+		time = "{time: >6s}{frac: >3s}".format(time=timer_state.time().decode('utf8'),
+		                                       frac=timer_state.fraction().decode('utf8'))
 
-		loop.widget.original_widget.contents.append((urwid.Text("{game:^40}".format(game=game)), ('weight', 1)))
-		loop.widget.original_widget.contents.append((urwid.Text("{category:<34} {attempts:>5}".format(category=category,attempts=attempts)), ('weight', 1)))
+		loop.widget.original_widget.contents.append((urwid.Text(u"{game: ^56}".format(game=game)), ('weight', 1)))
+		loop.widget.original_widget.contents.append((urwid.Text(u"{category: <49} {attempts: >6}".format(category=category,attempts=attempts)), ('weight', 1)))
 
 		for i in range(0, splits_state.len()):
-			sname = splits_state.name(i)
-			sdelta = splits_state.delta(i)
-			stime = splits_state.time(i)
-			loop.widget.original_widget.contents.append((urwid.Text("{name:<20} {delta:>9} {time:>9}".format(name=sname, delta=sdelta, time=stime)), ('weight', 1)))
+			sname = splits_state.name(i).decode('utf8')
+			sdelta = splits_state.delta(i).decode('utf8')
+			stime = splits_state.time(i).decode('utf8')
+			loop.widget.original_widget.contents.append((urwid.Text(u"{name: <36s} {delta: >9s} {time: >9s}".format(name=sname, delta=sdelta, time=stime)), ('weight', 1)))
 			pass
 
-		loop.widget.original_widget.contents.append((urwid.Text("{time:>40}".format(time=time)), ('weight', 1)))
+		loop.widget.original_widget.contents.append((urwid.Text(u"{time: >56}".format(time=time)), ('weight', 1)))
 
 		loop.set_alarm_in(0.03, self, data)
 		pass
@@ -83,10 +84,10 @@ def main():
 	run = livesplit_core.Run.new()
 	if args.run:
 		try:
-			runfile = open(args.run, 'r')
+			runfile = open(args.run, 'rb')
 			run = livesplit_core.Run.parse_file(runfile)
 		except IOError:
-			print "Unable to open: %s" % args.run
+			print("Unable to open: %s" % args.run)
 			sys.exit(1)
 
 	# Set up Livesplit Things
@@ -102,6 +103,7 @@ def main():
 	}
 
 	# Start up urwid
+	urwid.set_encoding("utf8")
 	loop = urwid.MainLoop(urwid.SolidFill(), unhandled_input = InputHandler(timer))
 	loop.screen.set_terminal_properties(colors=256)
 	loop.widget = urwid.Filler(urwid.Pile([]))
