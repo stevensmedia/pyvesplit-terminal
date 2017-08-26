@@ -90,7 +90,7 @@ def main():
 	args = args_parser.parse_args()
 
 	# Load Run
-	run = livesplit_core.Run.new()
+	run = None
 	if args.run != None:
 		try:
 			runfile = open(args.run, 'rb')
