@@ -12,5 +12,9 @@ livesplit-core
 https://github.com/CryZe/livesplit-core
 
 urwid
-pip3 install urwid
+pip install urwid
 http://urwid.org
+
+x256
+pip install x256
+https://github.com/magarcia/python-x256
