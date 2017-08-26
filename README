@@ -2,3 +2,15 @@ pyvesplit-terminal by Neil Stevens
 
 Based on livesplit-one-terminal by Christopher Serr
 https://github.com/CryZe/livesplit-one-terminal
+
+Requirements:
+
+python 2.6+ or python 3
+https://www.python.org
+
+livesplit-core
+https://github.com/CryZe/livesplit-core
+
+urwid
+pip3 install urwid
+http://urwid.org
