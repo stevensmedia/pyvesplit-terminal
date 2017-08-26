@@ -91,17 +91,28 @@ def main():
 
 	# Load Run
 	run = livesplit_core.Run.new()
-	if args.run:
+	if args.run != None:
 		try:
 			runfile = open(args.run, 'rb')
 			run = livesplit_core.Run.parse_file(runfile)
 		except IOError:
 			print("Unable to open: %s" % args.run)
 			sys.exit(1)
+	else:
+		run = livesplit_core.Run.parse(default_run, len(default_run))
+
+	if not run:
+		print("Unable to parse: %s" % args.run)
+		sys.exit(1)
 
 	# Set up Livesplit Things
 	settings = livesplit_core.GeneralLayoutSettings.default()
 	timer = livesplit_core.Timer.new(run)
+
+	if not timer:
+		print("Unable to parse: %s" % args.run)
+		sys.exit(1)
+
 	layout = livesplit_core.Layout.default_layout()
 	print(json.dumps(json.loads(layout.state_as_json(timer).decode('utf-8')), indent=2))
 
@@ -115,5 +126,38 @@ def main():
 	loopHandler = LoopHandler(timer, layout, settings)
 	loopHandler(loop, None)
 	loop.run()
+
+default_run = u"""\uFEFF<?xml version="1.0" encoding="UTF-8"?>
+<Run version="1.6.0">
+  <GameIcon />
+  <GameName>Pyvesplit</GameName>
+  <CategoryName>Terminal</CategoryName>
+  <Metadata>
+    <Run id="" />
+    <Platform usesEmulator="False">
+    </Platform>
+    <Region>
+    </Region>
+    <Variables />
+  </Metadata>
+  <Offset>00:00:00</Offset>
+  <AttemptCount>0</AttemptCount>
+  <AttemptHistory>
+  </AttemptHistory>
+  <Segments>
+    <Segment>
+      <Name>Done!</Name>
+      <Icon></Icon>
+      <SplitTimes>
+      </SplitTimes>
+      <BestSegmentTime>
+      </BestSegmentTime>
+      <SegmentHistory>
+      </SegmentHistory>
+    </Segment>
+  </Segments>
+  <AutoSplitterSettings />
+</Run>
+""".encode('utf8')
 
 main()
