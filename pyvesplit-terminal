@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import json
 import livesplit_core
 import os
 from pprint import pprint, pformat
@@ -35,31 +36,39 @@ class LoopHandler:
 		self.layout = layout
 		self.settings = settings
 
+	def renderTitle(self, component, pile):
+		game = component['line1'] or ""
+		category = component['line2'] or ""
+		attempts = "%i" % component['attempts']
+		pile.contents.append((urwid.Text(u"{game: ^56}".format(game=game)), ('weight', 1)))
+		pile.contents.append((urwid.Text(u"{category: <49} {attempts: >6}".format(category=category,attempts=attempts)), ('weight', 1)))
+
+	def renderSplits(self, component, pile):
+		for split in component['splits']:
+			pile.contents.append((urwid.Text(u"{name: <36s} {delta: >9s} {time: >9s}".format(name=split['name'], delta=split['delta'], time=split['time'])), ('weight', 1)))
+
+	def renderTimer(self, component, pile):
+		time = "{time: >6s}{frac: >3s}".format(time=component['time'],
+		                                       frac=component['fraction'])
+		pile.contents.append((urwid.Text(u"{time: >56}".format(time=time)), ('weight', 1)))
+
+	def renderPreviousSegment(self, component, pile):
+		pile.contents.append((urwid.Text(u"{text: <37s} {time: >18s}".format(text=component['text'], time=component['time'])), ('weight', 1)))
+
 	def __call__(self, loop, data):
 		pile = loop.widget.original_widget
 		del pile.contents[:]
 
-		splits_state = self.layout['splits'].state(self.timer, self.settings)
-		title_state = self.layout['title'].state(self.timer)
-		game = (title_state.line1() or b"").decode('utf8')
-		category = (title_state.line2() or b"").decode('utf8')
-		attempts = "%i" % title_state.attempts()
+		layout_state = json.loads(self.layout.state_as_json(self.timer))
 
-		timer_state = self.layout['timer'].state(self.timer, self.settings)
-		time = "{time: >6s}{frac: >3s}".format(time=timer_state.time().decode('utf8'),
-		                                       frac=timer_state.fraction().decode('utf8'))
-
-		loop.widget.original_widget.contents.append((urwid.Text(u"{game: ^56}".format(game=game)), ('weight', 1)))
-		loop.widget.original_widget.contents.append((urwid.Text(u"{category: <49} {attempts: >6}".format(category=category,attempts=attempts)), ('weight', 1)))
-
-		for i in range(0, splits_state.len()):
-			sname = splits_state.name(i).decode('utf8')
-			sdelta = splits_state.delta(i).decode('utf8')
-			stime = splits_state.time(i).decode('utf8')
-			loop.widget.original_widget.contents.append((urwid.Text(u"{name: <36s} {delta: >9s} {time: >9s}".format(name=sname, delta=sdelta, time=stime)), ('weight', 1)))
-			pass
-
-		loop.widget.original_widget.contents.append((urwid.Text(u"{time: >56}".format(time=time)), ('weight', 1)))
+		for comp in layout_state['components']:
+			for name, component in comp.items():
+				{
+					'Title': self.renderTitle,
+					'Splits': self.renderSplits,
+					'Timer': self.renderTimer,
+					'PreviousSegment': self.renderPreviousSegment,
+				}.get(name, lambda component, pile: None)(component, pile)
 
 		loop.set_alarm_in(0.03, self, data)
 		pass
@@ -93,14 +102,8 @@ def main():
 	# Set up Livesplit Things
 	settings = livesplit_core.GeneralLayoutSettings.default()
 	timer = livesplit_core.Timer.new(run)
-	layout = {
-		'timer': livesplit_core.TimerComponent.new(),
-		'splits': livesplit_core.SplitsComponent.new(),
-		'title': livesplit_core.TitleComponent.new(),
-		'previous': livesplit_core.PreviousSegmentComponent.new(),
-		'sob': livesplit_core.SumOfBestComponent.new(),
-		'possible': livesplit_core.PossibleTimeSaveComponent.new()
-	}
+	layout = livesplit_core.Layout.default_layout()
+	print(json.dumps(json.loads(layout.state_as_json(timer).decode('utf-8')), indent=2))
 
 	# Start up urwid
 	urwid.set_encoding("utf8")
