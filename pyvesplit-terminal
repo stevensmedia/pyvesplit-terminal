@@ -127,7 +127,7 @@ def main():
 	loopHandler(loop, None)
 	loop.run()
 
-default_run = u"""\uFEFF<?xml version="1.0" encoding="UTF-8"?>
+default_run = u"""<?xml version="1.0" encoding="UTF-8"?>
 <Run version="1.6.0">
   <GameIcon />
   <GameName>Pyvesplit</GameName>
