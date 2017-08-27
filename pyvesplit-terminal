@@ -329,8 +329,9 @@ def main():
 
 	# Save config
 	if args.config:
+		config['layout'] = json.loads(layout.settings_as_json().decode('utf8'))
 		configfile = open(args.config, 'w')
-		configfile.write(layout.settings_as_json().decode('utf8'))
+		configfile.write(json.dumps(config, sort_keys=True, indent=4))
 
 	# Ask to save run
 	if args.run:
