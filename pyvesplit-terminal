@@ -11,6 +11,22 @@ import sys
 import urwid
 from x256 import x256
 
+class YesNoBox(urwid.Filler):
+	def __init__(self, header_msg, yes_msg = u"Yes", no_msg = u"No"):
+		self.state = None
+		header = urwid.Text(header_msg)
+		yes = urwid.Button(yes_msg, self.input, True)
+		no = urwid.Button(no_msg, self.input, False)
+		pile = urwid.Pile([header, yes, no])
+		urwid.Filler.__init__(self, pile)
+
+	def get_state(self):
+		return self.state
+
+	def input(self, button, result):
+		self.state = result
+		raise urwid.ExitMainLoop()
+
 def generatePalette(colors):
 	# 16 color palette downconversion by Ashen-Shugar ( http://rhostmush.com )
 	# Used with permission
@@ -154,10 +170,9 @@ class InputHandler:
 		}.get(key, lambda: None)()
 
 class LoopHandler:
-	def __init__(self, timer, layout, settings):
+	def __init__(self, timer, layout):
 		self.timer = timer
 		self.layout = layout
-		self.settings = settings
 
 	def getColor(self, visual):
 		r = visual[0] * 255;
@@ -167,17 +182,18 @@ class LoopHandler:
 		return "h{}".format(x256.from_rgb(r, g, b))
 
 	def getSemanticColor(self, semantic):
+		settings = json.loads(self.layout.settings_as_json())
 		return {
-			'Default': self.layout_settings['general']['text_color'],
-			'AheadGainingTime': self.layout_settings['general']['ahead_gaining_time_color'],
-			'AheadLosingTime': self.layout_settings['general']['ahead_losing_time_color'],
-			'BehindLosingTime': self.layout_settings['general']['behind_losing_time_color'],
-			'BehindGainingTime': self.layout_settings['general']['behind_gaining_time_color'],
-			'BestSegment': self.layout_settings['general']['best_segment_color'],
-			'NotRunning': self.layout_settings['general']['not_running_color'],
-			'Paused': self.layout_settings['general']['paused_color'],
-			'PersonalBest': self.layout_settings['general']['personal_best_color']
-		}.get(semantic, self.layout_settings['general']['text_color'])
+			'Default': settings['general']['text_color'],
+			'AheadGainingTime': settings['general']['ahead_gaining_time_color'],
+			'AheadLosingTime': settings['general']['ahead_losing_time_color'],
+			'BehindLosingTime': settings['general']['behind_losing_time_color'],
+			'BehindGainingTime': settings['general']['behind_gaining_time_color'],
+			'BestSegment': settings['general']['best_segment_color'],
+			'NotRunning': settings['general']['not_running_color'],
+			'Paused': settings['general']['paused_color'],
+			'PersonalBest': settings['general']['personal_best_color']
+		}.get(semantic, settings['general']['text_color'])
 
 	def renderTitle(self, component, pile):
 		game = component['line1'] or ""
@@ -221,7 +237,6 @@ class LoopHandler:
 		del pile.contents[:]
 
 		self.state = json.loads(self.layout.state_as_json(self.timer))
-		self.layout_settings = json.loads(self.layout.settings_as_json())
 
 		for comp in self.state['components']:
 			for name, component in comp.items():
@@ -237,7 +252,7 @@ class LoopHandler:
 
 def main():
 	# Command Line Arguments
-	app_description = "A featureful, customizable timer for speedrunners, in the terminal"
+	app_description = "A featureful, customizable timer for speed runners, in the terminal"
 	args_parser = argparse.ArgumentParser(description = app_description)
 	args_parser.add_argument("-c", "--config",
 	                         dest="config",
@@ -248,8 +263,7 @@ def main():
 	                         dest="palette",
 	                         metavar="NUM",
 	                         help="Number of terminal colors to use",
-	                         choices=['16', '256'],
-	                         default=16)
+	                         choices=['16', '256'])
 	args_parser.add_argument(dest="run",
 	                         help="Splits run file to load",
 	                         metavar="[RUN]",
@@ -272,29 +286,66 @@ def main():
 	if not run:
 		print("Unable to parse: %s" % args.run)
 		sys.exit(1)
-
-	# Set up Livesplit Things
-	settings = livesplit_core.GeneralLayoutSettings.default()
+	
+	# Set up Timer
 	timer = livesplit_core.Timer.new(run)
 
 	if not timer:
 		print("Unable to parse: %s" % args.run)
 		sys.exit(1)
 
-	layout = livesplit_core.Layout.default_layout()
-	#print(json.dumps(json.loads(layout.state_as_json(timer).decode('utf-8')), indent=2))
+	# Load Configuration
+	config = None
+	if args.config:
+		try:
+			configfile = open(args.config, 'r')
+			config = json.loads(configfile.read())
+		except IOError:
+			config = None
+
+	if not config or not isinstance(config, dict):
+		config = json.loads(default_config)
+
+	config.setdefault('layout', False)
+
+	# Set up Layout
+	if config['layout']:
+		layout = livesplit_core.Layout.parse_json(json.dumps(config['layout']).encode('utf8'))
+	else:
+		layout = livesplit_core.Layout.default_layout()
 
 	# Start up urwid
 	urwid.set_encoding("utf8")
+	palette = args.palette or config['palette'] or 16
 	loop = urwid.MainLoop(widget = urwid.SolidFill(),
 	                      unhandled_input = InputHandler(timer))
-	loop.screen.set_terminal_properties(colors=int(args.palette))
-	loop.screen.register_palette(generatePalette(args.palette))
+	loop.screen.set_terminal_properties(colors=int(palette))
+	loop.screen.register_palette(generatePalette(palette))
 	loop.widget = urwid.Filler(urwid.Pile([]))
 
-	loopHandler = LoopHandler(timer, layout, settings)
+	loopHandler = LoopHandler(timer, layout)
 	loopHandler(loop, None)
 	loop.run()
+
+	# Save config
+	if args.config:
+		configfile = open(args.config, 'w')
+		configfile.write(layout.settings_as_json().decode('utf8'))
+
+	# Ask to save run
+	if args.run:
+		dialog = YesNoBox(header_msg = u"Save run '{}'?".format(args.run))
+		loop = urwid.MainLoop(widget = dialog)
+		loop.run()
+
+		if dialog.get_state():
+			run_xml = timer.get_run().save_as_lss().decode('utf8')
+			configfile = open(args.run, 'w')
+			configfile.write(run_xml)
+
+default_config = u"""
+{}
+"""
 
 default_run = u"""<?xml version="1.0" encoding="UTF-8"?>
 <Run version="1.6.0">
