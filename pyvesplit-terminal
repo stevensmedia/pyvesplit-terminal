@@ -345,7 +345,9 @@ def main():
 			configfile.write(run_xml)
 
 default_config = u"""
-{}
+{
+"palette": 16
+}
 """
 
 default_run = u"""<?xml version="1.0" encoding="UTF-8"?>
