@@ -316,7 +316,7 @@ def main():
 
 	# Start up urwid
 	urwid.set_encoding("utf8")
-	palette = args.palette or config['palette'] or 16
+	palette = args.palette or config['palette'] or "16"
 	loop = urwid.MainLoop(widget = urwid.SolidFill(),
 	                      unhandled_input = InputHandler(timer))
 	loop.screen.set_terminal_properties(colors=int(palette))
