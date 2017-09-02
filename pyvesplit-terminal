@@ -145,9 +145,11 @@ def generatePalette(colors):
 	palette = []
 	for index in palette256:
 		idx = 'h{}'.format(index)
+		bidx = 'b{}'.format(index)
 		color16 = convertRhostToUrwid[convert256to16[index]]
 		color = idx
-		palette.append((idx, color16, 'default', 'default', color, 'default'))
+		palette.append((idx, color16, '', '', color, ''))
+		palette.append((bidx, '', color16, '', '', color))
 	return palette
 
 class InputHandler:
@@ -176,12 +178,13 @@ class LoopHandler:
 		self.layout = layout
 		self.config = config
 
-	def getColor(self, visual):
+	def getColor(self, visual, background = False):
 		r = visual[0] * 255;
 		g = visual[1] * 255;
 		b = visual[2] * 255;
 		a = visual[3] * 255;
-		return "h{}".format(x256.from_rgb(r, g, b))
+		char = 'b' if background else 'h'
+		return "{}{}".format(char, x256.from_rgb(r, g, b))
 
 	def getSemanticColor(self, semantic):
 		settings = json.loads(self.layout.settings_as_json())
