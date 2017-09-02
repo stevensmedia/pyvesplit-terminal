@@ -178,13 +178,27 @@ class LoopHandler:
 		self.layout = layout
 		self.config = config
 
-	def getColor(self, visual, background = False):
-		r = visual[0] * 255;
-		g = visual[1] * 255;
-		b = visual[2] * 255;
-		a = visual[3] * 255;
-		char = 'b' if background else 'h'
+	def getColor(self, visual, isBackground = False):
+		r = visual[0] * 255 * visual[3]
+		g = visual[1] * 255 * visual[3]
+		b = visual[2] * 255 * visual[3]
+		char = 'b' if isBackground else 'h'
 		return "{}{}".format(char, x256.from_rgb(r, g, b))
+
+	def getBackgroundColor(self, attr):
+		if 'Plain' in attr:
+			visual = attr['Plain']
+		elif 'Vertical' in attr:
+			visual = attr['Vertical'][0]
+		else:
+			visual = [1.0, 1.0, 1.0, 1.0]
+
+		return self.getColor(visual, isBackground=True)
+
+	def appendTextForAttributes(self, pile, text, foreground, background, layout=('weight', 1)):
+		f = self.getColor(foreground)
+		b = self.getBackgroundColor(background)
+		pile.contents.append((urwid.Text((f, (b, text))), layout))
 
 	def getSemanticColor(self, semantic):
 		settings = json.loads(self.layout.settings_as_json())
@@ -206,36 +220,45 @@ class LoopHandler:
 		attempts = "%i" % component['attempts']
 
 		text =  u"{game: ^56}".format(game=game)
-		color = self.getColor(self.state['text_color'])
-		pile.contents.append((urwid.Text((color, text)), ('weight', 1)))
+		fg = self.state['text_color']
+		bg = component['background']
+		self.appendTextForAttributes(pile, text, fg, bg)
 
 		text = u"{category: <49} {attempts: >6}".format(
 		       category=category,
 		       attempts=attempts)
-		pile.contents.append((urwid.Text((color, text)), ('weight', 1)))
+		self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderSplits(self, component, pile):
 		for split in component['splits']:
-			color = self.getColor(split['visual_color'])
+			fg = split['visual_color']
+			if split['is_current_split']:
+				bg = component['current_split_gradient']
+			elif 'background' in component:
+				bg = component['background']
+			else:
+				bg = self.state['background']
 			text = u"{name: <36s} {delta: >9s} {time: >9s}".format(
 			       name=split['name'],
 			       delta=split['delta'],
 			       time=split['time'])
-			pile.contents.append((urwid.Text((color, text)), ('weight', 1)))
+			self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderTimer(self, component, pile):
 		time = "{time: >6s}{frac: >3s}".format(time=component['time'],
 		                                       frac=component['fraction'])
 		text = figlet_format(time, font=self.config['timer_font'])
-		color = self.getColor(self.getSemanticColor(component['semantic_color']))
-		pile.contents.append((urwid.Text((color, text)), ('weight', 1)))
+		fg = self.getSemanticColor(component['semantic_color'])
+		bg = component['top_color']
+		self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderPreviousSegment(self, component, pile):
 		text = u"{text: <37s} {time: >18s}".format(
 		       text=component['text'],
 		       time=component['time'])
-		color = self.getColor(component['visual_color'])
-		pile.contents.append((urwid.Text((color, text)), ('weight', 1)))
+		fg = component['visual_color']
+		bg = self.state['background']
+		self.appendTextForAttributes(pile, text, fg, bg)
 
 	def __call__(self, loop, data):
 		pile = loop.widget.original_widget
