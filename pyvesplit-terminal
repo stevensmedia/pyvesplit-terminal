@@ -186,7 +186,9 @@ class LoopHandler:
 		return "{}{}".format(char, x256.from_rgb(r, g, b))
 
 	def getBackgroundColor(self, attr):
-		if 'Plain' in attr:
+		if attr == "Transparent":
+			return ''
+		elif 'Plain' in attr:
 			visual = attr['Plain']
 		elif 'Vertical' in attr:
 			visual = attr['Vertical'][0]
@@ -256,7 +258,7 @@ class LoopHandler:
 		figlet = figlet_format(time, font=self.config['timer_font'])
 		text = self.formatFiglet(figlet, formatter)
 		fg = self.getSemanticColor(component['semantic_color'])
-		bg = component['top_color']
+		bg = component['background']
 		self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderPreviousSegment(self, component, pile):
