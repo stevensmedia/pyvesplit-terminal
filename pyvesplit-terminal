@@ -219,14 +219,13 @@ class LoopHandler:
 		category = component['line2'] or ""
 		attempts = "%i" % component['attempts']
 
-		text =  u"{game: ^56}".format(game=game)
+		text = game.center(self.screen_size[0] - 1)
 		fg = self.state['text_color']
 		bg = component['background']
 		self.appendTextForAttributes(pile, text, fg, bg)
 
-		text = u"{category: <49} {attempts: >6}".format(
-		       category=category,
-		       attempts=attempts)
+		text = category.ljust(self.screen_size[0] - 7) + \
+		       attempts.rjust(6)
 		self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderSplits(self, component, pile):
@@ -238,24 +237,31 @@ class LoopHandler:
 				bg = component['background']
 			else:
 				bg = self.state['background']
-			text = u"{name: <36s} {delta: >9s} {time: >9s}".format(
-			       name=split['name'],
-			       delta=split['delta'],
-			       time=split['time'])
+
+			text = split['name'].ljust(self.screen_size[0] - 21) + ' ' + \
+			       split['delta'].rjust(9) + ' ' + \
+			       split['time'].rjust(9) + ' '
 			self.appendTextForAttributes(pile, text, fg, bg)
+
+	def formatFiglet(self, figlet, formatter):
+		lines = figlet.split("\n")
+		for i in xrange(0, len(lines)):
+			lines[i] = formatter(lines[i])
+		return "\n".join(lines)
 
 	def renderTimer(self, component, pile):
 		time = "{time: >6s}{frac: >3s}".format(time=component['time'],
 		                                       frac=component['fraction'])
-		text = figlet_format(time, font=self.config['timer_font'])
+		formatter = lambda line: line.rjust(self.screen_size[0] - 1)
+		figlet = figlet_format(time, font=self.config['timer_font'])
+		text = self.formatFiglet(figlet, formatter)
 		fg = self.getSemanticColor(component['semantic_color'])
 		bg = component['top_color']
 		self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderPreviousSegment(self, component, pile):
-		text = u"{text: <37s} {time: >18s}".format(
-		       text=component['text'],
-		       time=component['time'])
+		text = component['text'].ljust(self.screen_size[0] - 19) + ' ' + \
+		       component['time'].rjust(18)
 		fg = component['visual_color']
 		bg = self.state['background']
 		self.appendTextForAttributes(pile, text, fg, bg)
@@ -265,6 +271,7 @@ class LoopHandler:
 		del pile.contents[:]
 
 		self.state = json.loads(self.layout.state_as_json(self.timer))
+		self.screen_size = loop.screen.get_cols_rows()
 
 		for comp in self.state['components']:
 			for name, component in comp.items():
