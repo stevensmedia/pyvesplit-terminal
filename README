@@ -11,6 +11,10 @@ https://www.python.org
 livesplit-core
 https://github.com/CryZe/livesplit-core
 
+pyfiglet
+pip install pyfiglet
+https://github.com/pwaller/pyfiglet
+
 urwid
 pip install urwid
 http://urwid.org

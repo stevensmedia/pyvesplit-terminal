@@ -6,6 +6,7 @@ import json
 import livesplit_core
 import os
 from pprint import pprint, pformat
+from pyfiglet import figlet_format
 import string
 import sys
 import urwid
@@ -170,9 +171,10 @@ class InputHandler:
 		}.get(key, lambda: None)()
 
 class LoopHandler:
-	def __init__(self, timer, layout):
+	def __init__(self, config, timer, layout):
 		self.timer = timer
 		self.layout = layout
+		self.config = config
 
 	def getColor(self, visual):
 		r = visual[0] * 255;
@@ -221,7 +223,7 @@ class LoopHandler:
 	def renderTimer(self, component, pile):
 		time = "{time: >6s}{frac: >3s}".format(time=component['time'],
 		                                       frac=component['fraction'])
-		text = u"{time: >56}".format(time=time)
+		text = figlet_format(time, font=self.config['timer_font'])
 		color = self.getColor(self.getSemanticColor(component['semantic_color']))
 		pile.contents.append((urwid.Text((color, text)), ('weight', 1)))
 
@@ -304,9 +306,11 @@ def main():
 			config = None
 
 	if not config or not isinstance(config, dict):
-		config = json.loads(default_config)
+		config = json.loads("{}")
 
 	config.setdefault('layout', False)
+	config.setdefault('palette', '16')
+	config.setdefault('timer_font', '3x5')
 
 	# Set up Layout
 	if config['layout']:
@@ -323,7 +327,7 @@ def main():
 	loop.screen.register_palette(generatePalette(palette))
 	loop.widget = urwid.Filler(urwid.Pile([]))
 
-	loopHandler = LoopHandler(timer, layout)
+	loopHandler = LoopHandler(config, timer, layout)
 	loopHandler(loop, None)
 	loop.run()
 
@@ -343,12 +347,6 @@ def main():
 			run_xml = timer.get_run().save_as_lss().decode('utf8')
 			configfile = open(args.run, 'w')
 			configfile.write(run_xml)
-
-default_config = u"""
-{
-"palette": "16"
-}
-"""
 
 default_run = u"""<?xml version="1.0" encoding="UTF-8"?>
 <Run version="1.6.0">
