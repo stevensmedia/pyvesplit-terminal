@@ -125,14 +125,13 @@ class LoopHandler:
 
 	def getBackgroundColor(self, attr):
 		if attr == "Transparent":
-			return ''
+			return self.getBackgroundColor(self.state['background'])
 		elif 'Plain' in attr:
 			visual = attr['Plain']
 		elif 'Vertical' in attr:
 			visual = attr['Vertical'][0]
 		else:
-			visual = [1.0, 1.0, 1.0, 1.0]
-
+			return self.getBackgroundColor(self.state['background'])
 		return self.getColor(visual)
 
 	def appendTextForAttributes(self, pile, text, foreground, background, layout=('weight', 1)):
