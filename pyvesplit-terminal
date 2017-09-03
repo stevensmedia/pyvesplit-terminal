@@ -200,7 +200,7 @@ class LoopHandler:
 		self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderPreviousSegment(self, component, pile):
-		text = component['text'].ljust(self.screen_size[0] - 19) + ' ' + \
+		text = component['text'].ljust(self.screen_size[0] - 20) + ' ' + \
 		       component['time'].rjust(18)
 		fg = component['visual_color']
 		bg = self.state['background']
