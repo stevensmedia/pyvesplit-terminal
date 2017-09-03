@@ -180,7 +180,7 @@ class LoopHandler:
 
 			text = split['name'].ljust(self.screen_size[0] - 21) + ' ' + \
 			       split['delta'].rjust(9) + ' ' + \
-			       split['time'].rjust(9) + ' '
+			       split['time'].rjust(9)
 			self.appendTextForAttributes(pile, text, fg, bg)
 
 	def formatFiglet(self, figlet, formatter):
