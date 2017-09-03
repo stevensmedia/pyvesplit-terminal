@@ -193,7 +193,7 @@ class LoopHandler:
 		time = "{time: >6s}{frac: >3s}".format(time=component['time'],
 		                                       frac=component['fraction'])
 		formatter = lambda line: line.rjust(self.screen_size[0] - 1)
-		figlet = figlet_format(time, font=self.config['timer_font'])
+		figlet = figlet_format(time.strip(), font=self.config['timer_font'])
 		text = self.formatFiglet(figlet, formatter)
 		fg = self.getSemanticColor(component['semantic_color'])
 		bg = component['background']
