@@ -155,18 +155,53 @@ class LoopHandler:
 		}.get(semantic, settings['general']['text_color'])
 
 	def renderTitle(self, component, pile):
-		game = component['line1'] or ""
-		category = component['line2'] or ""
-		attempts = "%i" % component['attempts']
+		settings = json.loads(self.layout.settings_as_json())
+		component_settings = settings['components'][0]
 
-		text = game.center(self.screen_size[0] - 1)
+		game = component['line1'] or ""
+		if component_settings['Title']['center_text']:
+			game_formatter = game.center
+		else:
+			game_formatter = game.ljust
+
+		if component_settings['Title']['show_attempt_count']:
+			attempts = "%i" % component['attempts']
+			if component_settings['Title']['show_finished_runs_count']:
+				attempts += "/%i" % (component['finished_runs'] or 0)
+		else:
+			attempts = ""
+
+		if component_settings['Title']['show_category_name']:
+			category = component['line2'] or ""
+		else:
+			category = ""
+
+		if component_settings['Title']['show_platform']:
+			# Implement later
+			pass
+
+		if component_settings['Title']['show_region']:
+			# Implement later
+			pass
+
+		if component_settings['Title']['show_variables']:
+			# Implement later
+			pass
+
+		# Can't implement display game icon setting
+
+		if component_settings['Title']['display_as_single_line']:
+			pass
+
+		text = game_formatter(self.screen_size[0] - 1)
 		fg = self.state['text_color']
 		bg = component['background']
 		self.appendTextForAttributes(pile, text, fg, bg)
 
-		text = category.ljust(self.screen_size[0] - 7) + \
-		       attempts.rjust(6)
-		self.appendTextForAttributes(pile, text, fg, bg)
+		if len(category) or len(attempts):
+			text = category.ljust(self.screen_size[0] - 13) + \
+		       	  attempts.rjust(12)
+			self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderSplits(self, component, pile):
 		for split in component['splits']:
