@@ -140,6 +140,13 @@ class LoopHandler:
 		aspec = getAttrSpecForColors(self.config['palette'], f, b)
 		pile.contents.append(( urwid.Text((aspec, text)), layout))
 
+	def getSettingsForComponent(self, component_name):
+		settings = json.loads(self.layout.settings_as_json())
+		for component in settings['components']:
+			if component_name in component:
+				return component[component_name]
+		return {}
+
 	def getSemanticColor(self, semantic):
 		settings = json.loads(self.layout.settings_as_json())
 		return {
@@ -156,41 +163,41 @@ class LoopHandler:
 
 	def renderTitle(self, component, pile):
 		settings = json.loads(self.layout.settings_as_json())
-		component_settings = settings['components'][0]
+		component_settings = self.getSettingsForComponent('Title')
 
 		game = component['line1'] or ""
-		if component_settings['Title']['center_text']:
+		if component_settings.get('center_text', True):
 			game_formatter = game.center
 		else:
 			game_formatter = game.ljust
 
-		if component_settings['Title']['show_attempt_count']:
+		if component_settings.get('show_attempt_count', True):
 			attempts = "%i" % component['attempts']
-			if component_settings['Title']['show_finished_runs_count']:
-				attempts += "/%i" % (component['finished_runs'] or 0)
+			if component_settings.get('show_finished_runs_count', False):
+				attempts = "%i/" % (component['finished_runs'] or 0) + attempts
 		else:
 			attempts = ""
 
-		if component_settings['Title']['show_category_name']:
+		if component_settings.get('show_category_name', True):
 			category = component['line2'] or ""
 		else:
 			category = ""
 
-		if component_settings['Title']['show_platform']:
+		if component_settings.get('show_platform', True):
 			# Implement later
 			pass
 
-		if component_settings['Title']['show_region']:
+		if component_settings.get('show_region', True):
 			# Implement later
 			pass
 
-		if component_settings['Title']['show_variables']:
+		if component_settings.get('show_variables', True):
 			# Implement later
 			pass
 
 		# Can't implement display game icon setting
 
-		if component_settings['Title']['display_as_single_line']:
+		if component_settings.get('display_as_single_line', False):
 			pass
 
 		text = game_formatter(self.screen_size[0] - 1)
