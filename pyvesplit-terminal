@@ -177,10 +177,7 @@ class LoopHandler:
 		else:
 			attempts = ""
 
-		if component_settings.get('show_category_name', True):
-			category = component['line2'] or ""
-		else:
-			category = ""
+		category = component['line2'] or ""
 
 		text = game_formatter(self.screen_size[0] - 1)
 		fg = self.state['text_color']
@@ -195,7 +192,40 @@ class LoopHandler:
 	def renderSplits(self, component, pile):
 		component_settings = self.getSettingsForComponent('Splits')
 
+		visual_split_count = component_settings.get("visual_split_count", 50)
+		split_preview_count = component_settings.get("split_preview_count", 1)
+		separator_last_split = component_settings.get("separator_last_split", True)
+		always_show_last_split = component_settings.get("always_show_last_split", True)
+
+		cur = 0
+		last = len(component['splits']) - 1
+		start = 0
+		end = last
+
 		for split in component['splits']:
+			if split['is_current_split']:
+				cur = split['index']
+
+		to_crop = end - visual_split_count + 1
+		if to_crop > 0:
+			end = cur + split_preview_count
+			start = last - visual_split_count
+
+			if end > last:
+				start -= end - last
+				end = last
+
+			if last > end and always_show_last_split:
+				start += 1
+
+			if start < 0:
+				start = 0
+
+		range = xrange(start, end + 1)
+
+		for i in range:
+			split = component['splits'][i]
+
 			fg = self.getSemanticColor(split['semantic_color'])
 			if split['is_current_split']:
 				bg = component['current_split_gradient']
