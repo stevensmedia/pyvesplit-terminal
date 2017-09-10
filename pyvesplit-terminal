@@ -186,7 +186,7 @@ class LoopHandler:
 
 		if len(category) or len(attempts):
 			text = category.ljust(self.screen_size[0] - 13) + \
-		       	  attempts.rjust(12)
+			       attempts.rjust(12)
 			self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderSplits(self, component, pile):
@@ -236,6 +236,13 @@ class LoopHandler:
 			if i == last and separator_last_split:
 				text = ''.ljust(self.screen_size[0] - 1, '-')
 				fg = self.getSemanticColor('Default')
+				self.appendTextForAttributes(pile, text, fg, bg)
+
+			if i == start:
+				fg = self.getSemanticColor('Default')
+				text = 'Segment'.ljust(self.screen_size[0] - 21) + ' ' + \
+				       'Delta'.rjust(9) + ' ' + \
+				       'Time'.rjust(9)
 				self.appendTextForAttributes(pile, text, fg, bg)
 
 			fg = self.getSemanticColor(split['semantic_color'])
