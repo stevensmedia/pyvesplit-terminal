@@ -162,7 +162,6 @@ class LoopHandler:
 		}.get(semantic, settings['general']['text_color'])
 
 	def renderTitle(self, component, pile):
-		settings = json.loads(self.layout.settings_as_json())
 		component_settings = self.getSettingsForComponent('Title')
 
 		game = component['line1'] or ""
@@ -183,23 +182,6 @@ class LoopHandler:
 		else:
 			category = ""
 
-		if component_settings.get('show_platform', True):
-			# Implement later
-			pass
-
-		if component_settings.get('show_region', True):
-			# Implement later
-			pass
-
-		if component_settings.get('show_variables', True):
-			# Implement later
-			pass
-
-		# Can't implement display game icon setting
-
-		if component_settings.get('display_as_single_line', False):
-			pass
-
 		text = game_formatter(self.screen_size[0] - 1)
 		fg = self.state['text_color']
 		bg = component['background']
@@ -211,6 +193,8 @@ class LoopHandler:
 			self.appendTextForAttributes(pile, text, fg, bg)
 
 	def renderSplits(self, component, pile):
+		component_settings = self.getSettingsForComponent('Splits')
+
 		for split in component['splits']:
 			fg = self.getSemanticColor(split['semantic_color'])
 			if split['is_current_split']:
