@@ -226,7 +226,6 @@ class LoopHandler:
 		for i in range:
 			split = component['splits'][i]
 
-			fg = self.getSemanticColor(split['semantic_color'])
 			if split['is_current_split']:
 				bg = component['current_split_gradient']
 			elif 'background' in component:
@@ -234,6 +233,12 @@ class LoopHandler:
 			else:
 				bg = self.state['background']
 
+			if i == last and separator_last_split:
+				text = ''.ljust(self.screen_size[0] - 1, '-')
+				fg = self.getSemanticColor('Default')
+				self.appendTextForAttributes(pile, text, fg, bg)
+
+			fg = self.getSemanticColor(split['semantic_color'])
 			text = split['name'].ljust(self.screen_size[0] - 21) + ' ' + \
 			       split['delta'].rjust(9) + ' ' + \
 			       split['time'].rjust(9)
