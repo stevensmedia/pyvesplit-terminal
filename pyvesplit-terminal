@@ -274,6 +274,13 @@ class LoopHandler:
 		bg = self.state['background']
 		self.appendTextForAttributes(pile, text, fg, bg)
 
+	def renderTotalPlaytime(self, component, pile):
+		text = component['text'].ljust(self.screen_size[0] - 20) + ' ' + \
+		       component['time'].rjust(18)
+		fg = self.getSemanticColor('Default')
+		bg = component['background']
+		self.appendTextForAttributes(pile, text, fg, bg)
+
 	def __call__(self, loop, data):
 		pile = loop.widget.original_widget
 		del pile.contents[:]
@@ -284,10 +291,11 @@ class LoopHandler:
 		for comp in self.state['components']:
 			for name, component in comp.items():
 				{
-					'Title': self.renderTitle,
+					'PreviousSegment': self.renderPreviousSegment,
 					'Splits': self.renderSplits,
 					'Timer': self.renderTimer,
-					'PreviousSegment': self.renderPreviousSegment,
+					'Title': self.renderTitle,
+					'TotalPlaytime': self.renderTotalPlaytime,
 				}.get(name, lambda component, pile: None)(component, pile)
 
 		loop.set_alarm_in(0.03, self, data)
